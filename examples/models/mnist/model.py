@@ -36,7 +36,7 @@ def create_mnist_inference():
     state = torch.load(
         os.path.join(
             os.path.dirname(__file__),
-            'mnist/mnist_generator.pretrained'
+            'mnist_generator.pretrained'
         ), 
         map_location='cpu'
     )

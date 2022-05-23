@@ -1,1 +1,3 @@
+liblzma-dev
+libsndfile1
 ffmpeg

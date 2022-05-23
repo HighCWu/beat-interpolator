@@ -27,6 +27,7 @@ def create_celeba256_inference():
 
     return {
         'name': 'Celeba256',
+        'generator': celeba256_generator,
         'latent_dim': celeba256_noise.shape[1],
         'fps': 5,
         'batch_size': 1,
