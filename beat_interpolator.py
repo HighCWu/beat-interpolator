@@ -60,14 +60,14 @@ def beat_interpolator(wave_path, generator, latent_dim, seed, fps=30, batch_size
         times2 = np.asarray(times)
         times = merge_times(times, times2)
         
-    times = np.concatenate([np.asarray([0.]), times], 0)
+    times = np.concatenate([np.asarray([0.]), times, np.asarray([duration])], 0)
     times = list(np.unique(np.int64(np.floor(times * fps / 2))) * 2)
 
     latents = []
     time0 = 0
     latent0 = rng.randn(latent_dim)
     for time1 in times:
-        latent1 = rng.randn(latent_dim)
+        latent1 = latent0 * (1 - strength) + rng.randn(latent_dim) * strength
         db_cur_index = np.argmin(np.abs(db_times - time1.astype('float32') / fps))
         db_cur = db[db_cur_index]
         if db_cur < db_min + (db_mean - db_min) / 3:
@@ -83,7 +83,7 @@ def beat_interpolator(wave_path, generator, latent_dim, seed, fps=30, batch_size
         if time1 > duration * fps:
             time1 = int(duration * fps)
         t1 = time1 - time0
-        alpha = 0.5 * strength
+        alpha = 0.5
         latent2 = latent0 * alpha + latent1 * (1 - alpha)
         for j in range(t1):
             alpha = j / t1
