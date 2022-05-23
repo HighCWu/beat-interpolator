@@ -1,0 +1,8 @@
+cython
+gradio==3.0.3
+Pillow
+moviepy
+torch
+torchvision
+pyaudio
+BeatNet
