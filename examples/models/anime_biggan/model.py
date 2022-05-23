@@ -430,7 +430,7 @@ def create_anime_biggan_inference():
         'generator': anime_biggan_generator,
         'latent_dim': anime_biggan.z_dim,
         'fps': 5,
-        'batch_size': 1,
+        'batch_size': 2,
         'strength': 0.45,
         'max_duration': 15,
         'use_peak': True
