@@ -1,18 +1,15 @@
-import torch
 import librosa
 import numpy as np
 import gradio as gr
 import soundfile as sf
 
-from BeatNet.BeatNet import BeatNet
 from moviepy.editor import *
 
 
-device_fn = torch.device
-torch.device = lambda device: device_fn(device.replace('cuda:cpu', 'cpu'))
-estimator = BeatNet(1, mode='offline', inference_model='DBN', plot=[], thread=False, )
-torch.device = device_fn
-
+cache_wav_path = [f'/tmp/{str(i).zfill(2)}.wav' for i in range(50)]
+wave_path_iter = iter(cache_wav_path)
+cache_mp4_path = [f'/tmp/{str(i).zfill(2)}.mp4' for i in range(50)]
+path_iter = iter(cache_mp4_path)
 
 def merge_times(times, times2):
     ids = np.unique(np.where(abs(times2[...,None] - times[None]) < 0.2)[1])
@@ -25,7 +22,7 @@ def merge_times(times, times2):
     return times
 
 
-def beat_interpolator(wave_path, generator, latent_dim, seed, fps=30, batch_size=1, strength=1, max_duration=None, use_peak=False, use_beatnet=False):
+def beat_interpolator(wave_path, generator, latent_dim, seed, fps=30, batch_size=1, strength=1, max_duration=None, use_peak=False):
     fps = max(10, fps)
     strength = np.clip(strength, 0, 1)
     hop_length = 512
@@ -37,7 +34,12 @@ def beat_interpolator(wave_path, generator, latent_dim, seed, fps=30, batch_size
         y_idx = int(y_len * max_duration / duration)
         y = y[:y_idx]
 
-        wave_path = '/tmp/tmp.wav'
+        global wave_path_iter
+        try:
+            wave_path = next(wave_path_iter)
+        except:
+            wave_path_iter = iter(cache_wav_path)
+            wave_path = next(wave_path_iter)
         sf.write(wave_path, y, sr, subtype='PCM_24')
         y, sr = librosa.load(wave_path, sr=24000)
         duration = librosa.get_duration(y=y, sr=sr)
@@ -56,10 +58,6 @@ def beat_interpolator(wave_path, generator, latent_dim, seed, fps=30, batch_size
         peaks = librosa.util.peak_pick(onset_env, 1, 1, 1, 1, 0.8, 5)
         times2 = librosa.frames_to_time(np.arange(len(onset_env)), sr=sr, hop_length=512)[peaks]
         times2 = np.asarray(times)
-        times = merge_times(times, times2)
-    if use_beatnet:
-        b_out = estimator.process(wave_path)
-        times2 = np.asarray([float(t[0]) for t in b_out])
         times = merge_times(times, times2)
         
     times = np.concatenate([np.asarray([0.]), times], 0)
@@ -107,8 +105,17 @@ def beat_interpolator(wave_path, generator, latent_dim, seed, fps=30, batch_size
             break
         ix += batch_size
 
+    global path_iter
+    try:
+        video_path = next(path_iter)
+    except:
+        path_iter = iter(cache_mp4_path)
+        video_path = next(path_iter)
+    
     video = ImageSequenceClip(outs, fps=fps)
     audioclip = AudioFileClip(wave_path)
 
     video = video.set_audio(audioclip)
-    video.write_videofile("out.mp4", fps=fps)
+    video.write_videofile(video_path, fps=fps)
+
+    return video_path
