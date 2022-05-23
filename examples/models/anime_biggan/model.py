@@ -417,7 +417,7 @@ def create_anime_biggan_inference():
         latents = torch.stack(latents)
         label = torch.zeros([latents.shape[0], anime_biggan.c_dim], device=device)
         label[:,0] = 1
-        out = anime_biggan(latents)
+        out = anime_biggan(latents, label)
         outs = []
         for out_i in out:
             out_i = (out_i.permute(1,2,0) * 255).clamp(0,255).cpu().numpy()
@@ -426,12 +426,12 @@ def create_anime_biggan_inference():
         return outs
     
     return {
-        'name': 'anime_biggan',
+        'name': 'Anime Biggan',
         'generator': anime_biggan_generator,
-        'latent_dim': 128,
+        'latent_dim': anime_biggan.z_dim,
         'fps': 5,
         'batch_size': 1,
-        'strength': 0.75,
+        'strength': 0.45,
         'max_duration': 15,
         'use_peak': True
     }

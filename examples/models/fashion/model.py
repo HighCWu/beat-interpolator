@@ -21,6 +21,7 @@ def create_fashion_inference():
 
     return {
         'name': 'Fashion',
+        'generator': fashion_generator,
         'latent_dim': fashion_noise.shape[1],
         'fps': 15,
         'batch_size': 8,
